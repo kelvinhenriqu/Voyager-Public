@@ -1,0 +1,34 @@
+import mysql.connector
+import pandas as pd
+
+
+def mysql_connector(host="127.0.0.1",
+                    database="manager",
+                    user="specshell",
+                    password="specshell"):
+
+    try:
+        return mysql.connector.connect(
+            host=host,
+            database=database,
+            user=user,
+            password=password
+        )
+    except mysql.connector.Error as e:
+        print("Error reading data from MySQL table", e)
+        raise e
+
+def get_temp():
+    query = '''
+        SELECT 
+            created,
+            inline_temp
+        FROM inline
+        ORDER BY id DESC
+        LIMIT 2
+    '''
+    db_connection = mysql_connector()
+    df = pd.read_sql(query, db_connection)
+    print(df)
+
+get_temp()
