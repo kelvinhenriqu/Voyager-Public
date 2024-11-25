@@ -1,0 +1,48 @@
+import socket
+import struct
+
+def connect_to_mysql(host, port, user, password):
+    try:
+        # Conexão inicial com o servidor MySQL via socket
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect((host, port))
+        
+        # Receber o pacote inicial do servidor (Handshake)
+        handshake_packet = sock.recv(1024)
+
+        # Parse do handshake (simplificado para exemplo)
+        protocol_version = handshake_packet[0]
+        server_version = handshake_packet[1:].split(b'\x00')[0]
+        print(f"MySQL Protocol: {protocol_version}, Server Version: {server_version.decode()}")
+
+        # Construir o pacote de autenticação (simplificado)
+        username = user.encode('utf-8') + b'\x00'
+        password = password.encode('utf-8') + b'\x00'
+        
+        auth_response = username + password
+        packet_length = struct.pack('<I', len(auth_response))[:3]
+        packet_number = b'\x01'
+        auth_packet = packet_length + packet_number + auth_response
+
+        # Enviar pacote de autenticação
+        sock.sendall(auth_packet)
+        
+        # Receber a resposta do servidor
+        response = sock.recv(1024)
+        if response[4] == 0x00:  # Resposta OK
+            print("Conexão autenticada com sucesso!")
+        else:
+            print("Falha na autenticação.")
+
+    except Exception as e:
+        print(f"Erro ao conectar ao MySQL: {e}")
+    finally:
+        sock.close()
+
+# Configurações do banco de dados
+host = "localhost"
+port = 3306
+user = "root"
+password = "senha"
+
+connect_to_mysql(host, port, user, password)
